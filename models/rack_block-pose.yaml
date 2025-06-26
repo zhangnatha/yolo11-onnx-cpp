@@ -1,0 +1,16 @@
+# Train/val/test sets
+path: ./data_sets/Train_dataset
+train: train
+val: val
+test: test
+
+# Keypoints
+kpt_shape: [2, 3] # number of keypoints, number of dims (2 for x,y or 3 for x,y,visible)
+flip_idx: [0, 1]
+pose_skeleton:
+  - [0, 1]
+
+# Classes
+names:
+  0: rack
+  1: block
