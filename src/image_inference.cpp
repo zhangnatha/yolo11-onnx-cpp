@@ -144,6 +144,14 @@ int main() {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
     std::cout << "检测完成，用时: " << duration.count() << " 毫秒" << std::endl;
 
+    // 在左上角绘制耗时（白色背景，黑色字体）
+    std::string timeText = "Time Cost: " + std::to_string(duration.count()) + " ms";
+    cv::Size textSize = cv::getTextSize(timeText, cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, nullptr);
+    cv::rectangle(image, cv::Point(10, 10), cv::Point(20 + textSize.width, 40 + textSize.height),
+                 cv::Scalar(255, 255, 255), cv::FILLED);
+    cv::putText(image, timeText, cv::Point(20, 40), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+               cv::Scalar(0, 0, 0), 2);
+
     // 可视化结果
     #if defined(YOLO_TASK_CLASSIFY)
       detector.drawClassificationResult(image, results);

@@ -149,6 +149,14 @@ int main() {
                 detector.printPoseResults(results);
             #endif
 
+            // 在左上角绘制耗时（白色背景，黑色字体）
+            std::string timeText = "Time Cost: " + std::to_string(duration.count()) + " ms";
+            cv::Size textSize = cv::getTextSize(timeText, cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, nullptr);
+            cv::rectangle(frame, cv::Point(10, 10), cv::Point(20 + textSize.width, 40 + textSize.height),
+                         cv::Scalar(255, 255, 255), cv::FILLED);
+            cv::putText(frame, timeText, cv::Point(20, 40), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                       cv::Scalar(0, 0, 0), 2);
+
             // 可视化
             #if defined(YOLO_TASK_CLASSIFY)
                 detector.drawClassificationResult(frame, results);
