@@ -1,13 +1,9 @@
 # yolo11-onnx-cpp
 use onnx-runtime to inference YOLOv11 model by c++
 
-![detection](./assert/.md/.detect.gif)
-
-![detection](./assert/.md/.obb.gif)
-
-![detection](./assert/.md/.seg.gif)
-
-![detection](./assert/.md/.pose.gif)
+| Detect                                 | OBB                                 | Segment                             | Pose/Keypoints                       |
+| -------------------------------------- | ----------------------------------- | ----------------------------------- |--------------------------------------|
+| ![detection](./assert/.md/.detect.gif) | ![detection](./assert/.md/.obb.gif) | ![detection](./assert/.md/.seg.gif) | ![detection](./assert/.md/.pose.gif) |
 
 # Inference by c++ for onnx runtime
 In `image_inference.cpp` & `video_inference.cpp` & `camera_inference.cpp`, you can see following c++ macro definitions:
@@ -19,21 +15,10 @@ In `image_inference.cpp` & `video_inference.cpp` & `camera_inference.cpp`, you c
 // #define YOLO_TASK_POSE
 ```
 Uncomment one of these to select the YOLO task
-- YOLO_TASK_CLASSIFY
 
-![classify](./assert/.md/.classify_task.png)
-- YOLO_TASK_DETECT
-
-![detection](./assert/.md/.detect_task.png)
-- YOLO_TASK_OBB
-
-![obb](./assert/.md/.obb_task.png)
-- YOLO_TASK_SEG
-
-![seg](./assert/.md/.segment_task.png)
-- YOLO_TASK_POSE
-
-![pose](./assert/.md/.pose_task.png)
+| YOLO_TASK_CLASSIFY                           | YOLO_TASK_DETECT                            | YOLO_TASK_OBB                      | YOLO_TASK_SEG                          | YOLO_TASK_POSE                       |
+| -------------------------------------------- | ------------------------------------------- | ---------------------------------- | -------------------------------------- | ------------------------------------ |
+| ![classify](./assert/.md/.classify_task.png) | ![detection](./assert/.md/.detect_task.png) | ![obb](./assert/.md/.obb_task.png) | ![seg](./assert/.md/.segment_task.png) | ![pose](./assert/.md/.pose_task.png) |
 
 [Reference](https://github.com/ultralytics/ultralytics.git) Ultralytics YOLO11 🚀
 
