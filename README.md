@@ -1,11 +1,24 @@
 # yolo11-onnx-cpp
 use onnx-runtime to inference YOLOv11 model by c++
 
-| Detect                                 | OBB                                 | Segment                             | Pose/Keypoints                       |
-| -------------------------------------- | ----------------------------------- | ----------------------------------- |--------------------------------------|
+| Detect TASK                            | OBB TASK                            | Segment TASK                        | Pose/Keypoints TASK                  |
+| -------------------------------------- | ----------------------------------- | ----------------------------------- | ------------------------------------ |
 | ![detection](./assert/.md/.detect.gif) | ![detection](./assert/.md/.obb.gif) | ![detection](./assert/.md/.seg.gif) | ![detection](./assert/.md/.pose.gif) |
 
+- NVIDIA GeForce RTX 2060
+
+| Detect TASK | OBB TASK | Segment TASK | Pose/Keypoints TASK |
+| ----------- | -------- | ------------ | ------------------- |
+| 7ms         | 12ms     | 20ms         | 7ms                 |
+
+- Intel® Core™ i7-10700 CPU @ 2.90GHz × 16
+
+| Detect TASK | OBB TASK | Segment TASK | Pose/Keypoints TASK |
+| ----------- | -------- | ------------ | ------------------- |
+| 29ms        | 29ms     | 48ms         | 35ms                |
+
 # Inference by c++ for onnx runtime
+
 In `image_inference.cpp` & `video_inference.cpp` & `camera_inference.cpp`, you can see following c++ macro definitions:
 ```c++
 // #define YOLO_TASK_CLASSIFY
@@ -33,7 +46,7 @@ Uncomment one of these to select the YOLO task
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp.git)
 - [GPU: onnxruntime-linux-x64-gpu-cuda12-1.17.3/CPU: onnxruntime-linux-x64-1.17.3](https://github.com/microsoft/onnxruntime/releases/tag/v1.17.3)
   - [NVIDIA - CUDA](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html)
-  ![cuda-onnx](./assert/.md/CUDA_ONNX.png)
+  ![cuda-onnx](./assert/.md/.CUDA_ONNX.png)
 
 > Follow command to build
 
