@@ -18,9 +18,23 @@ struct ClassificationResult {
     float confidence{0.0f}; // 预测的置信度得分
     std::string className{}; // 预测的类别名称
 
+    // 新增：支持top-k类别
+    std::vector<int> topKClassIds;
+    std::vector<float> topKConfidences;
+    std::vector<std::string> topKClassNames;
+
     ClassificationResult() = default;
     ClassificationResult(int id, float conf, std::string name)
         : classId(id), confidence(conf), className(std::move(name)) {}
+    // 新增：top-k构造
+    ClassificationResult(const std::vector<int>& ids, const std::vector<float>& confs, const std::vector<std::string>& names)
+        : topKClassIds(ids), topKConfidences(confs), topKClassNames(names) {
+        if (!ids.empty() && !confs.empty() && !names.empty()) {
+            classId = ids[0];
+            confidence = confs[0];
+            className = names[0];
+        }
+    }
 };
 /* ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ */
 
