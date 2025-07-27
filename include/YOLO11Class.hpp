@@ -84,6 +84,49 @@ private:
                   std::vector<int64_t> &inputTensorShape);
   ClassificationResult
   postprocess(const std::vector<Ort::Value> &outputTensors);
+  // HSV转RGB工具函数
+  static void HSVtoRGB(int *r, int *g, int *b, int h, int s, int v) {
+    int i;
+    float RGB_min, RGB_max;
+    RGB_max = v * 2.55f;
+    RGB_min = RGB_max * (100 - s) / 100.0f;
+    i        = h / 60;
+    int difs = h % 60;
+    float RGB_Adj = (RGB_max - RGB_min) * difs / 60.0f;
+    switch(i)
+    {
+        case 0:
+            *r = RGB_max;
+            *g = RGB_min + RGB_Adj;
+            *b = RGB_min;
+            break;
+        case 1:
+            *r = RGB_max - RGB_Adj;
+            *g = RGB_max;
+            *b = RGB_min;
+            break;
+        case 2:
+            *r = RGB_min;
+            *g = RGB_max;
+            *b = RGB_min + RGB_Adj;
+            break;
+        case 3:
+            *r = RGB_min;
+            *g = RGB_max - RGB_Adj;
+            *b = RGB_max;
+            break;
+        case 4:
+            *r = RGB_min + RGB_Adj;
+            *g = RGB_min;
+            *b = RGB_max;
+            break;
+        default:
+            *r = RGB_max;
+            *g = RGB_min;
+            *b = RGB_max - RGB_Adj;
+            break;
+    }
+  }
 };
 
 // YOLO11Classifier 构造函数的实现
@@ -408,66 +451,63 @@ YOLO11Classifier::postprocess(const std::vector<Ort::Value> &outputTensors) {
   }
   std::cout << oss_scores.str() << std::endl;
 
-  // 找到最大分数及其对应的类别
-  int bestClassId = -1;
-  float maxScore = -std::numeric_limits<float>::infinity();
   std::vector<float> scores(currentNumClasses);
 
   // 处理不同的输出形状
   if (outputShape.size() == 2 && outputShape[0] == 1) {
-    // 情况 1: [1, num_classes] 形状
     for (int i = 0;
          i < currentNumClasses && i < static_cast<int>(outputShape[1]); ++i) {
       scores[i] = rawOutput[i];
-      if (scores[i] > maxScore) {
-        maxScore = scores[i];
-        bestClassId = i;
-      }
     }
   } else if (outputShape.size() == 1 ||
              (outputShape.size() == 2 && outputShape[0] > 1)) {
-    // 情况 2: [num_classes] 形状或 [batch_size, num_classes]
-    // 形状（取第一个批次）
     for (int i = 0; i < currentNumClasses && i < static_cast<int>(numScores);
          ++i) {
       scores[i] = rawOutput[i];
-      if (scores[i] > maxScore) {
-        maxScore = scores[i];
-        bestClassId = i;
-      }
     }
   }
 
-  if (bestClassId == -1) {
-    std::cerr << "错误：无法确定最佳类别 ID。" << std::endl;
-    return {};
-  }
-
-  // 应用 softmax 获得概率
+  // softmax概率
+  float maxScore = *std::max_element(scores.begin(), scores.end());
   float sumExp = 0.0f;
   std::vector<float> probabilities(currentNumClasses);
-
-  // 以数值稳定性计算 softmax
   for (int i = 0; i < currentNumClasses; ++i) {
     probabilities[i] = std::exp(scores[i] - maxScore);
     sumExp += probabilities[i];
   }
-
-  // 计算最终置信度
-  float confidence = sumExp > 0 ? probabilities[bestClassId] / sumExp : 0.0f;
-
-  // 获取类别名称
-  std::string className = "未知";
-  if (bestClassId >= 0 &&
-      static_cast<size_t>(bestClassId) < _classNames.size()) {
-    className = _classNames[bestClassId];
-  } else if (bestClassId >= 0) {
-    className = "ClassID_" + std::to_string(bestClassId);
+  for (int i = 0; i < currentNumClasses; ++i) {
+    probabilities[i] = sumExp > 0 ? probabilities[i] / sumExp : 0.0f;
   }
 
-  std::cout << "最佳类别 ID: " << bestClassId << ", 名称: " << className
-            << ", 置信度: " << confidence << std::endl;
-  return ClassificationResult(bestClassId, confidence, className);
+  // top-k
+  int topK = 5;
+  std::vector<int> indices(currentNumClasses);
+  std::iota(indices.begin(), indices.end(), 0);
+  std::partial_sort(indices.begin(), indices.begin() + std::min(topK, currentNumClasses), indices.end(),
+    [&probabilities](int a, int b) { return probabilities[a] > probabilities[b]; });
+
+  std::vector<int> topKClassIds;
+  std::vector<float> topKConfidences;
+  std::vector<std::string> topKClassNames;
+  for (int i = 0; i < std::min(topK, currentNumClasses); ++i) {
+    int idx = indices[i];
+    topKClassIds.push_back(idx);
+    topKConfidences.push_back(probabilities[idx]);
+    if (idx >= 0 && static_cast<size_t>(idx) < _classNames.size()) {
+      topKClassNames.push_back(_classNames[idx]);
+    } else {
+      topKClassNames.push_back("ClassID_" + std::to_string(idx));
+    }
+  }
+
+  // 兼容原有接口，首个为主类别
+  std::cout << "Top-" << topK << "类别: ";
+  for (int i = 0; i < (int)topKClassIds.size(); ++i) {
+    std::cout << topKClassNames[i] << "(" << topKConfidences[i] << ") ";
+  }
+  std::cout << std::endl;
+
+  return ClassificationResult(topKClassIds, topKConfidences, topKClassNames);
 }
 
 ClassificationResult YOLO11Classifier::detect(const cv::Mat &image) {
@@ -545,16 +585,7 @@ void YOLO11Classifier::drawClassificationResult(
               << std::endl;
     return;
   }
-  if (result.classId == -1) {
-    std::cout << "由于分类结果无效，跳过绘制。" << std::endl;
-    return;
-  }
-
-  std::ostringstream ss;
-  ss << result.className << ": " << std::fixed << std::setprecision(2)
-     << result.confidence * 100 << "%";
-  std::string text = ss.str();
-
+  int k = result.topKClassIds.empty() ? 1 : result.topKClassIds.size();
   int fontFace = cv::FONT_HERSHEY_SIMPLEX;
   double fontScale = std::min(image.rows, image.cols) * fontScaleMultiplier;
   if (fontScale < 0.4)
@@ -562,32 +593,67 @@ void YOLO11Classifier::drawClassificationResult(
   const int thickness = std::max(1, static_cast<int>(fontScale * 1.8));
   int baseline = 0;
 
-  cv::Size textSize =
-      cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-  baseline += thickness;
+  std::vector<std::string> texts;
+  std::vector<cv::Size> textSizes;
+  int totalHeight = 0, maxWidth = 0;
+  for (int i = 0; i < k; ++i) {
+    std::string className;
+    float conf = 0.0f;
+    int classId = -1;
+    if (!result.topKClassNames.empty() && i < (int)result.topKClassNames.size()) {
+      className = result.topKClassNames[i];
+      conf = result.topKConfidences[i];
+      classId = result.topKClassIds[i];
+    } else if (i == 0) {
+      className = result.className;
+      conf = result.confidence;
+      classId = result.classId;
+    } else {
+      break;
+    }
+    std::ostringstream ss;
+    ss << className << ": " << std::fixed << std::setprecision(2)
+       << conf * 100 << "%";
+    std::string text = ss.str();
+    texts.push_back(text);
+    cv::Size textSize = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
+    textSizes.push_back(textSize);
+    totalHeight += textSize.height + baseline + 4;
+    if (textSize.width > maxWidth) maxWidth = textSize.width;
+  }
 
-  cv::Point textPosition = position;
-  if (textPosition.x < 0)
-    textPosition.x = 0;
-  if (textPosition.y < textSize.height)
-    textPosition.y = textSize.height + 2;
+  int startX = (image.cols - maxWidth) / 2;
+  int startY = std::max(10, (int)(image.rows * 0.05));
+  cv::Point textPosition(startX, startY);
 
-  cv::Point backgroundTopLeft(textPosition.x,
-                              textPosition.y - textSize.height - baseline / 3);
-  cv::Point backgroundBottomRight(textPosition.x + textSize.width,
-                                  textPosition.y + baseline / 2);
-
-  backgroundTopLeft.x = utils::clamp(backgroundTopLeft.x, 0, image.cols - 1);
-  backgroundTopLeft.y = utils::clamp(backgroundTopLeft.y, 0, image.rows - 1);
-  backgroundBottomRight.x =
-      utils::clamp(backgroundBottomRight.x, 0, image.cols - 1);
-  backgroundBottomRight.y =
-      utils::clamp(backgroundBottomRight.y, 0, image.rows - 1);
-
-  cv::rectangle(image, backgroundTopLeft, backgroundBottomRight, bgColor,
-                cv::FILLED);
-  cv::putText(image, text, cv::Point(textPosition.x, textPosition.y), fontFace,
-              fontScale, textColor, thickness, cv::LINE_AA);
-
-  std::cout << "分类结果已绘制在图像上： " << text << std::endl;
+  for (int i = 0; i < (int)texts.size(); ++i) {
+    const std::string& text = texts[i];
+    const cv::Size& textSize = textSizes[i];
+    int thisBaseline = baseline;
+    int classId = -1;
+    if (!result.topKClassIds.empty() && i < (int)result.topKClassIds.size())
+      classId = result.topKClassIds[i];
+    else if (i == 0)
+      classId = result.classId;
+    // 生成HSV背景色
+    int r=0,g=0,b=0;
+    int nClass = std::max(1, (int)_classNames.size());
+    int hue = (nClass > 1) ? (360 * (classId % nClass) / nClass) : 0;
+    HSVtoRGB(&r, &g, &b, hue, 100, 100);
+    cv::Scalar thisBgColor(b, g, r); // OpenCV为BGR
+    cv::Scalar thisTextColor(0,0,0); // 黑色字体
+    cv::Point bgTopLeft(textPosition.x,
+                        textPosition.y - textSize.height - thisBaseline / 3);
+    cv::Point bgBottomRight(textPosition.x + textSize.width,
+                            textPosition.y + thisBaseline / 2);
+    bgTopLeft.x = utils::clamp(bgTopLeft.x, 0, image.cols - 1);
+    bgTopLeft.y = utils::clamp(bgTopLeft.y, 0, image.rows - 1);
+    bgBottomRight.x = utils::clamp(bgBottomRight.x, 0, image.cols - 1);
+    bgBottomRight.y = utils::clamp(bgBottomRight.y, 0, image.rows - 1);
+    cv::rectangle(image, bgTopLeft, bgBottomRight, thisBgColor, cv::FILLED);
+    cv::putText(image, text, cv::Point(textPosition.x, textPosition.y), fontFace,
+                fontScale, thisTextColor, thickness, cv::LINE_AA);
+    textPosition.y += textSize.height + baseline + 4;
+  }
+  std::cout << "分类结果已绘制在图像上（Top-" << k << "，居中上方，彩色背景）" << std::endl;
 }
