@@ -130,7 +130,7 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     #if defined(YOLO_TASK_CLASSIFY)
-      ClassificationResult results = detector.detect(image);
+      std::vector<ClassificationResult> results = detector.detect(image);
     #elif defined(YOLO_TASK_DETECT)
       std::vector<Detection> results = detector.detect(image, confThreshold, iouThreshold);
     #elif defined(YOLO_TASK_OBB)
