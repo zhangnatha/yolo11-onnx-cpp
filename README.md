@@ -36,17 +36,23 @@ Uncomment one of these to select the YOLO task
 [Reference](https://github.com/ultralytics/ultralytics.git) Ultralytics YOLO11 🚀
 
 ## Linux platform
-
-- CUDA 12.1 + cudnn8.9.7
-- cmake 3.17.5
 - ubuntu18.04
-- [ffmpeg](https://git.ffmpeg.org/ffmpeg.git)
-- [opencv4.5.5](https://github.com/opencv/opencv/releases/tag/4.5.5)
-- [librealsense 2.50.0](https://github.com/IntelRealSense/librealsense/releases/tag/v2.50.0)
+- cmake 3.17.5
+  - `bash install_cmake.sh`
+- CUDA 12.1 + cudnn8.9.7
+  - `bash install_cuda.sh`
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp.git)
+  - `bash build_yaml_cpp.sh`
+- [ffmpeg](https://git.ffmpeg.org/ffmpeg.git)
+  - `bash build_ffmpeg.sh`
+- [opencv4.5.5](https://github.com/opencv/opencv/releases/tag/4.5.5)
+  - `bash build_opencv.sh`
+- [librealsense 2.50.0](https://github.com/IntelRealSense/librealsense/releases/tag/v2.50.0)
+  - `bash build_realsense.sh`
 - [GPU: onnxruntime-linux-x64-gpu-cuda12-1.17.3/CPU: onnxruntime-linux-x64-1.17.3](https://github.com/microsoft/onnxruntime/releases/tag/v1.17.3)
   - [NVIDIA - CUDA](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html)
-  ![cuda-onnx](./assert/.md/.CUDA_ONNX.png)
+    - `bash install_onnxruntime.sh`
+    ![cuda-onnx](./assert/.md/.CUDA_ONNX.png)
 
 > Follow command to build
 

@@ -14,7 +14,7 @@ echo "开始编译并安装 yaml-cpp ${YAML_CPP_VERSION} 到 ${INSTALL_DIR}"
 # 1. 安装依赖
 echo "安装必要的依赖..."
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y git cmake build-essential -y
+sudo apt-get install -y git build-essential -y
 
 # 2. 下载 yaml-cpp 源码
 echo "下载 yaml-cpp ${YAML_CPP_VERSION} 源码..."

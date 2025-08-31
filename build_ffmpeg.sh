@@ -14,7 +14,7 @@ echo "开始编译并安装 FFmpeg ${FFMPEG_VERSION} 到 ${INSTALL_DIR}"
 # 1. 安装依赖
 echo "安装必要的依赖..."
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y git autoconf automake build-essential cmake libass-dev libfreetype6-dev \
+sudo apt-get install -y git autoconf automake build-essential libass-dev libfreetype6-dev \
     libsdl2-dev libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev \
     libxcb-xfixes0-dev pkg-config texinfo wget yasm zlib1g-dev nasm -y
 

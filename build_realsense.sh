@@ -45,7 +45,7 @@ make -j$(nproc)
 
 # 6. 安装 SDK
 echo "安装 RealSense SDK 到 ${INSTALL_DIR}/..."
-sudo make install
+make install
 
 
 # 7. 验证安装

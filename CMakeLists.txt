@@ -55,8 +55,8 @@ include_directories(
 
 # 仅在UNIX系统下添加yaml-cpp依赖
 if(UNIX)
-    include_directories(${CMAKE_SOURCE_DIR}/3rdpartyU18/yaml/include)
-    link_directories(${CMAKE_SOURCE_DIR}/3rdpartyU18/yaml/lib)
+    include_directories(${CMAKE_SOURCE_DIR}/3rdpartyU18/yaml-cpp/include)
+    link_directories(${CMAKE_SOURCE_DIR}/3rdpartyU18/yaml-cpp/lib)
 endif()
 
 # 查找pthread库（Linux需要）
@@ -88,7 +88,7 @@ if(WIN32)
         ${OpenCV_LIBS}
         "${ONNXRUNTIME_DIR}/lib/onnxruntime.lib"
     )
-    target_link_libraries(camera_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/onnxruntime.lib" ${THIRDPARTY_DIR}/camera_realsense/lib/librealsense2.so.2.50.0)
+    target_link_libraries(camera_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/onnxruntime.lib" ${THIRDPARTY_DIR}/camera_realsense/lib/librealsense2.so.2.54.2)
     target_link_libraries(video_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/onnxruntime.lib")
 else()
     message(STATUS "Building on Linux")
@@ -98,7 +98,7 @@ else()
         Threads::Threads
         avcodec avformat avutil swscale
     )
-    target_link_libraries(camera_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/libonnxruntime.so" Threads::Threads ${THIRDPARTY_DIR}/camera_realsense/lib/librealsense2.so.2.50.0 avcodec avformat avutil swscale)
+    target_link_libraries(camera_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/libonnxruntime.so" Threads::Threads ${THIRDPARTY_DIR}/camera_realsense/lib/librealsense2.so.2.54.2 avcodec avformat avutil swscale)
     target_link_libraries(video_inference ${OpenCV_LIBS} "${ONNXRUNTIME_DIR}/lib/libonnxruntime.so" Threads::Threads avcodec avformat avutil swscale)
 endif()
 
